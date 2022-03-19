@@ -27,7 +27,6 @@ func (a *API) loadInstance(w http.ResponseWriter, r *http.Request) (context.Cont
 }
 
 func (a *API) GetAppManifest(w http.ResponseWriter, r *http.Request) error {
-	// TODO update to real manifest
 	return sendJSON(w, http.StatusOK, map[string]string{
 		"version":     a.version,
 		"name":        "GitGateway",

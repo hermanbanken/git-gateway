@@ -95,10 +95,6 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	r.Get("/health", api.HealthCheck)
 
 	r.Route("/", func(r *router) {
-		if globalConfig.MultiInstanceMode {
-			r.Use(api.loadJWSSignatureHeader)
-			r.Use(api.loadInstanceConfig)
-		}
 		r.With(api.requireAuthentication).Mount("/github", NewGitHubGateway())
 		r.With(api.requireAuthentication).Mount("/gitlab", NewGitLabGateway())
 		r.With(api.requireAuthentication).Mount("/bitbucket", NewBitBucketGateway())
@@ -107,7 +103,7 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 
 	if globalConfig.MultiInstanceMode {
 		// Operator microservice API
-		r.With(api.verifyOperatorRequest).Get("/", api.GetAppManifest)
+		r.With(api.verifyOperatorRequest).Get("/manifest", api.GetAppManifest)
 		r.Route("/instances", func(r *router) {
 			r.Use(api.verifyOperatorRequest)
 
