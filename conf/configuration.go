@@ -37,7 +37,7 @@ type BitBucketConfig struct {
 type DBConfiguration struct {
 	Dialect     string `json:"dialect"`
 	Driver      string `json:"driver" required:"true"`
-	URL         string `json:"url" envconfig:"DATABASE_URL" required:"true"`
+	URL         string `json:"url" envconfig:"DATABASE_URL"`
 	Namespace   string `json:"namespace"`
 	Automigrate bool   `json:"automigrate"`
 }

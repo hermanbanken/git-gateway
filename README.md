@@ -2,7 +2,7 @@
 
 **Secure role based access to the APIs of common Git Hosting providers.**
 
-When building sites with a JAMstack approach, a common pattern is to store all content as structured data in a Git repository instead of relying on an external database.
+When building sites with a JAMstack approach, a common pattern is to store all content as structured data in a Git repository instead of relying on an external database. Git-Gateway in single-tenant mode requires no database. And multi-tenant mode only requires it to store configuration.
 
 Netlify CMS is an open-source content management UI that allows content editors to work with your content in Git through a familiar content editing interface. This allows people to write and edit content without having to write code or know anything about Git, markdown, YAML, JSON, etc.
 

@@ -4,6 +4,7 @@ import (
 	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/models"
 	"github.com/netlify/git-gateway/storage"
+	"github.com/netlify/git-gateway/storage/object"
 	"github.com/netlify/git-gateway/storage/sql"
 )
 
@@ -15,7 +16,11 @@ func Dial(config *conf.GlobalConfiguration) (storage.Connection, error) {
 
 	var conn storage.Connection
 	var err error
-	conn, err = sql.Dial(config)
+	if object.IsFirestore(config.DB) {
+		conn, err = object.Dial(config)
+	} else {
+		conn, err = sql.Dial(config)
+	}
 
 	if err != nil {
 		return nil, err
