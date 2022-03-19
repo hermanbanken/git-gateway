@@ -48,6 +48,11 @@
             "commands": [
                 "./build.sh"
             ]
+        },
+        "postcreate": {
+            "commands": [
+                "./post.sh"
+            ]
         }
     }
 }
