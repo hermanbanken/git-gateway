@@ -37,3 +37,39 @@ for GitLab:
    /projects/:owner/:name/repository/compare/
    /projects/:owner/:name/repository/branches/
 ```
+
+# Single-Tenant mode
+This mode just serves access to a single git repository.
+
+# Multi-Tenant mode
+This mode serves access to multiple git repositories, so it can be used by your whole organization or be hosted as a service to others (like how Netlify offers it).
+
+Authorization of operators happens through the `X-NF-Sign` header, which needs to be a JWT signed using the `$GITGATEWAY_OPERATOR_TOKEN` secret. To generate one easily, run:
+
+```bash
+brew install mike-engel/jwt-cli/jwt-cli # very nice jwt tool from https://github.com/mike-engel/jwt-cli
+export GITGATEWAY_DB_AUTOMIGRATE=1 # auto-create the sqlite tables
+./git-gateway multi & # start the gateway
+source .env # reads $GITGATEWAY_OPERATOR_TOKEN
+
+# Create instance
+export INSTANCE_SECRET=foobar
+export INSTANCE_ID=$(curl localhost:9999/instances -H "Authorization: Bearer $GITGATEWAY_OPERATOR_TOKEN" -X POST -d '{ "uuid": "5", "config": { "jwt": { "secret": "'$INSTANCE_SECRET'" }, "github": {} } }' -sS | tee -a /dev/stderr | jq -r .id)
+
+# Prepare being instance operator
+export GITGATEWAY_OPERATOR_JWT_DATA='{"id": "'$INSTANCE_ID'"}' # set the instance id
+export GITGATEWAY_OPERATOR_SIGN=$(jwt encode --secret=$GITGATEWAY_OPERATOR_TOKEN $GITGATEWAY_OPERATOR_JWT_DATA -e '2m')
+
+# Inspect instance
+curl localhost:9999/settings -H "X-NF-Sign: $(jwt encode --secret=$GITGATEWAY_OPERATOR_TOKEN $JWT_DATA -e '2m')"
+curl localhost:9999/settings \
+  -H "Authorization: Bearer $(jwt encode --secret=$INSTANCE_SECRET)" \
+  -H "X-NF-Sign: $GITGATEWAY_OPERATOR_SIGN"
+```
+
+Some important extra endpoints:
+
+- `POST /instances` - creates a new instance (params: `InstanceRequestParams`)
+- `GET /instances/{instance_id}` - inspect instance (params: `InstanceRequestParams`)
+- `PUT /instances/{instance_id}` - edit instance (params: `InstanceRequestParams`)
+- `DELETE /instances/{instance_id}` - delete instance
