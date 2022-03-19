@@ -1,5 +1,8 @@
 # git-gateway - Gateway to hosted git APIs
 
+[![Run on Google
+Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run/?git_repo=https://github.com/hermanbanken/git-gateway.git&revision=cloudrun&dir=cloudrun)
+
 **Secure role based access to the APIs of common Git Hosting providers.**
 
 When building sites with a JAMstack approach, a common pattern is to store all content as structured data in a Git repository instead of relying on an external database. Git-Gateway in single-tenant mode requires no database. And multi-tenant mode only requires it to store configuration.

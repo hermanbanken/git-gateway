@@ -3,6 +3,7 @@ module github.com/netlify/git-gateway
 go 1.12
 
 require (
+	cloud.google.com/go/compute v1.5.0
 	cloud.google.com/go/firestore v1.6.1
 	github.com/GoogleCloudPlatform/cloudsql-proxy v0.0.0-20170623214735-571947b0f240
 	github.com/denisenkom/go-mssqldb v0.0.0-20190909000816-272160613861 // indirect
@@ -25,8 +26,8 @@ require (
 	github.com/sirupsen/logrus v0.0.0-20170713114250-a3f95b5c4235
 	github.com/spf13/cobra v0.0.0-20170820023359-4a7b7e65864c
 	github.com/spf13/pflag v1.0.0 // indirect
-	github.com/stretchr/testify v1.6.1
-	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
-	google.golang.org/api v0.59.0
-	google.golang.org/grpc v1.40.0
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	google.golang.org/api v0.70.0
+	google.golang.org/grpc v1.44.0
 )
