@@ -12,6 +12,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/netlify/git-gateway/conf"
+	"github.com/netlify/git-gateway/static"
 	"github.com/netlify/git-gateway/storage"
 	"github.com/netlify/git-gateway/storage/dial"
 	"github.com/rs/cors"
@@ -94,11 +95,25 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 
 	r.Get("/health", api.HealthCheck)
 
-	r.Route("/", func(r *router) {
+	r.Route("/git/", func(r *router) {
 		r.With(api.requireAuthentication).Mount("/github", NewGitHubGateway())
 		r.With(api.requireAuthentication).Mount("/gitlab", NewGitLabGateway())
 		r.With(api.requireAuthentication).Mount("/bitbucket", NewBitBucketGateway())
 		r.With(api.requireAuthentication).Get("/settings", api.Settings)
+	})
+
+	r.Route("/identity/", func(r *router) {
+		r.Get("/settings", api.SiteSettings)
+		r.Post("/token", api.Token)
+		r.With(api.requireAuthentication).Get("/user", api.User)
+	})
+	r.Route("/", func(r *router) {
+		r.Get("/login", api.Login)
+		r.Get("/login", api.Logout)
+		r.Get("/auth/system/{provider}/callback", api.SystemCallback)
+		// r.Get("/auth/{uuid}/{provider}/callback", api.InstanceCallback)
+
+		r.Mount("/", http.FileServer(http.FS(static.Files)))
 	})
 
 	if globalConfig.MultiInstanceMode {

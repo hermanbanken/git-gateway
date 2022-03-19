@@ -27,6 +27,11 @@
         "GITGATEWAY_OPERATOR_TOKEN": {
             "description": "Secret used for Operator JWT signatures (for multi-tenant mode)",
             "generator": "secret"
+        },
+
+        "SESSION_SECRET": {
+            "description": "Session secret is used to sign cookies for operators",
+            "generator": "secret"
         }
     },
     "options": {

@@ -1,0 +1,19 @@
+{
+  "name": "git-gateway",
+  "short_name": "git-gateway",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chROME-512X512.PNG",
+      "SIZES": "512X512",
+      "TYPE": "IMAGE/PNG"
+    }
+  ],
+  "THEME_COLOR": "#FFFFFF",
+  "BACKGROUND_COLOR": "#FFFFFF",
+  "DISPLAY": "STANDALONE"
+}

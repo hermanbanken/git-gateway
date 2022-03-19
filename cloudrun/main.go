@@ -9,10 +9,10 @@ import (
 
 func main() {
 	// Detect the Cloud Run url from the environment
-	if _, hasValue := os.LookupEnv("GITGATEWAY_API_HOST"); !hasValue {
+	if _, hasValue := os.LookupEnv("GITGATEWAY_API_ENDPOINT"); !hasValue {
 		url, _ := getCloudRunApiUrl()
 		if url != nil {
-			os.Setenv("GITGATEWAY_API_HOST", url.Hostname())
+			os.Setenv("GITGATEWAY_API_ENDPOINT", url.Hostname())
 		}
 	}
 	// Use firestore by default

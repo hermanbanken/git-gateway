@@ -58,6 +58,13 @@ type GlobalConfiguration struct {
 	Logging           LoggingConfig `envconfig:"LOG"`
 	OperatorToken     string        `split_words:"true"`
 	MultiInstanceMode bool
+	Registration      *RegistrationConfig `envconfig:"REGISTRATION"`
+}
+
+type RegistrationConfig struct {
+	Provider     string `envconfig:"PROVIDER" json:"provider"`
+	ClientID     string `envconfig:"CLIENT_ID" json:"client_id"`
+	ClientSecret string `envconfig:"CLIENT_SECRET" json:"client_secret"`
 }
 
 // Configuration holds all the per-instance configuration.
