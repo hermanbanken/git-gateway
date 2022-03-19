@@ -148,17 +148,17 @@ func Dial(config *conf.GlobalConfiguration) (*Connection, error) {
 
 	var uri *url.URL
 	var err error
+	project := firestore.DetectProjectID
 	if config.DB.URL != "" {
 		uri, err = url.Parse(config.DB.URL)
 		if err != nil {
 			return nil, fmt.Errorf("invalid db url (format gcp://firestore?project=projectid): %w", err)
 		}
+		if proj := uri.Query().Get("project"); proj != "" {
+			project = proj
+		}
 	}
 
-	project := firestore.DetectProjectID
-	if proj := uri.Query().Get("project"); proj != "" {
-		project = proj
-	}
 	// make connection (WithBlock to ensure it works)
 	client, err := firestore.NewClient(ctx, project, option.WithGRPCDialOption(grpc.WithBlock()))
 	if err != nil {
