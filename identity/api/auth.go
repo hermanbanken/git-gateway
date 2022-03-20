@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
-	goth_github "github.com/markbates/goth/providers/github"
+	// goth_github "github.com/markbates/goth/providers/github"
 	"github.com/netlify/git-gateway/identity/models"
 	"golang.org/x/oauth2"
 )
@@ -27,9 +27,9 @@ type Session struct {
 
 func (a *API) withAuthentication(h func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		goth_github.New()
-		accessToken, err := gothic.GetFromSession("email", r)
-		accessToken, err := gothic.GetFromSession("accessToken", r)
+		// goth_github.New()
+		// accessToken, err := gothic.GetFromSession("email", r)
+		// accessToken, err := gothic.GetFromSession("accessToken", r)
 
 		// loginToApp
 		return h(w, r)
