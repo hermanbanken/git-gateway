@@ -24,3 +24,6 @@ vet: # Vet the code
 
 test: ## Run tests.
 	go test -v $(CHECK_FILES)
+
+publish-prebuild:
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/netlify/git-gateway/cmd.Version=`git rev-parse HEAD`"

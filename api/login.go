@@ -10,6 +10,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
+	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/models"
 )
 
@@ -47,6 +48,10 @@ func (a *API) Login(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (a *API) LoginToInstance() {
+
+}
+
 func (a *API) SystemCallback(w http.ResponseWriter, r *http.Request) error {
 	// providerName := chi.URLParam(r, "provider")
 	// if providerName != "github" {
@@ -63,10 +68,20 @@ func (a *API) SystemCallback(w http.ResponseWriter, r *http.Request) error {
 	}
 	id := fmt.Sprintf("%s|%s", providerName, user.UserID)
 	instance, err := a.db.GetInstance(id)
+	if err == nil {
+		instance.BaseConfig.GitHub.AccessToken = user.AccessToken
+		err = a.db.UpdateInstance(instance)
+	}
 	if err != nil && models.IsNotFoundError(err) {
 		instance = &models.Instance{
 			ID:   id,
 			UUID: uuid.New().String(),
+			BaseConfig: &conf.Configuration{
+				GitHub: conf.GitHubConfig{
+					AccessToken: user.AccessToken,
+					Repo:        user.UserID,
+				},
+			},
 		}
 		err = a.db.CreateInstance(instance)
 	}

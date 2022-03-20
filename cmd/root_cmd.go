@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -12,13 +14,16 @@ var configFile = ""
 var rootCmd = cobra.Command{
 	Use: "git-gateway",
 	Run: func(cmd *cobra.Command, args []string) {
+		if _, allowBootstrap := os.LookupEnv("BOOTSTRAP_IDENTITY"); allowBootstrap {
+			bootstrapIdentity()
+		}
 		execWithConfig(cmd, serve)
 	},
 }
 
 // RootCommand will setup and return the root command
 func RootCommand() *cobra.Command {
-	rootCmd.AddCommand(&serveCmd, &migrateCmd, &multiCmd, &versionCmd)
+	rootCmd.AddCommand(&serveCmd, &migrateCmd, &multiCmd, &bootstrapCmd, &versionCmd)
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "the config file to use")
 
 	return &rootCmd

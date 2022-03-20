@@ -4,3 +4,5 @@ gcloud services enable firestore.googleapis.com
 gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
 --member=serviceAccount:$(gcloud projects list --filter="$(gcloud config get-value project)" --format="value(PROJECT_NUMBER)")-compute@developer.gserviceaccount.com \
 --role=roles/datastore.user
+# enable bootstrap mode
+gcloud run services update $K_SERVICE --region $GOOGLE_CLOUD_REGION --project=$GOOGLE_CLOUD_PROJECT --platform managed --args=bootstrap
