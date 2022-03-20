@@ -2,15 +2,18 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v43/github"
 	goth_github "github.com/markbates/goth/providers/github"
 	"github.com/netlify/git-gateway/identity/models"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -42,6 +45,8 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
+		// Enable "Request user authorization (OAuth) during installation" and "Redirect on update"
+
 		// Either try to login directly (but user has no Installation yet)
 		// a.loginToApp(w, r, app)
 		// Or install first
@@ -69,14 +74,40 @@ func (a *API) installApp(w http.ResponseWriter, r *http.Request, app *models.App
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
-func (a *API) loginToApp(w http.ResponseWriter, r *http.Request, app *models.App) {
-	state := url.Values{"app": []string{strconv.FormatInt(app.ID, 10)}}.Encode()
-	redirectURL := a.githubConfig(app).AuthCodeURL(state, oauth2.SetAuthURLParam("login", app.Owner.Login))
-	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+func (a *API) hook(w http.ResponseWriter, r *http.Request) error {
+	// TODO validate webhook signature
+	defer r.Body.Close()
+
+	switch r.Header.Get("X-GitHub-Event") {
+	case "installation":
+		event := github.InstallationEvent{}
+		err := json.NewDecoder(r.Body).Decode(&event)
+		if err != nil {
+			return err
+		}
+		logrus.Infof("Installation created for app %s (%s) with id %s", event.Installation.GetAppID(), event.Installation.GetAppSlug(), event.Installation.GetID())
+		// err = a.db.CreateInstallation(&models.Installation{
+		// 	AppID:          event.Installation.GetAppID(),
+		// 	InstallationID: event.Installation.GetID(),
+		// })
+	}
+
+	return nil
 }
 
-func (a *API) hook(w http.ResponseWriter, r *http.Request) error {
-	return nil
+func (a *API) appClient(app *models.App) (*github.Client, error) {
+	tr := http.DefaultTransport
+	appsTr, err := ghinstallation.NewAppsTransport(tr, app.ID, app.PEM)
+	client := github.NewClient(&http.Client{Transport: appsTr})
+	return client, err
+}
+
+func (a *API) installationClient(app *models.App, installation *models.Installation) (*github.Client, error) {
+	tr := http.DefaultTransport
+	appsTr, err := ghinstallation.NewAppsTransport(tr, app.ID, app.PEM)
+	installationTr := ghinstallation.NewFromAppsTransport(appsTr, installation.InstallationID)
+	client := github.NewClient(&http.Client{Transport: installationTr})
+	return client, err
 }
 
 func (a *API) githubConfig(app *models.App) *oauth2.Config {
@@ -123,5 +154,10 @@ func (a *API) callback(w http.ResponseWriter, r *http.Request) error {
 	// https://docs.github.com/en/developers/apps/managing-github-apps/installing-github-apps#authorizing-users-during-installation
 	// https://github.com/apps/<app name>/installations/new?state=AB12t
 	w.Write([]byte(user.GetEmail()))
+	return nil
+}
+
+func (a *API) home(w http.ResponseWriter, r *http.Request) error {
+	// loginToApp
 	return nil
 }

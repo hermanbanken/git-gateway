@@ -12,6 +12,7 @@ import (
 	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/identity/models"
 	"github.com/pkg/errors"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -33,6 +34,28 @@ func (conn *Connection) ctx() context.Context {
 
 func (conn *Connection) Close() error {
 	return conn.client.Close()
+}
+
+func (conn *Connection) ListApps(count int, start string) (out []*models.App, err error) {
+	it := conn.client.Collection(conn.appCollection).
+		OrderBy(firestore.DocumentID, firestore.Asc).
+		StartAt(start).
+		Limit(count).
+		Documents(conn.ctx())
+	for {
+		snp, err := it.Next()
+		if err == nil {
+			app := new(models.App)
+			out = append(out, app)
+			err = snp.DataTo(app)
+			if err != nil {
+				return out, err
+			}
+		}
+		if iterator.Done == err {
+			return out, nil
+		}
+	}
 }
 
 func (conn *Connection) CreateApp(app *models.App) error {

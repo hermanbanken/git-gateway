@@ -15,10 +15,11 @@ import (
 )
 
 type API struct {
-	handler http.Handler
-	db      storage.Connection
-	config  *conf.GlobalConfiguration
-	version string
+	handler      http.Handler
+	db           storage.Connection
+	config       *conf.GlobalConfiguration
+	version      string
+	SetupEnabled bool
 }
 
 const AppSetupRedirectPath = "/identity/github/setup-redirect"
@@ -71,6 +72,7 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	r.Get(AppSetupRedirectPath, withError(api.setup))
 	r.Post(AppHook, withError(api.hook))
 	r.Get(AppOAuthCallback, withError(api.callback))
+	r.Get("/", withError(api.withAuthentication(api.home)))
 
 	api.handler = chi.ServerBaseContext(r, ctx)
 	LoadTemplates()

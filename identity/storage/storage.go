@@ -6,6 +6,7 @@ import "github.com/netlify/git-gateway/identity/models"
 type Connection interface {
 	Close() error
 
+	ListApps(count int, start string) ([]*models.App, error)
 	CreateApp(app *models.App) error
 	GetApp(appID int64) (*models.App, error)
 

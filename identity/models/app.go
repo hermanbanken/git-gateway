@@ -27,7 +27,7 @@ type AppOwner struct {
 
 type Installation struct {
 	// Github App ID
-	AppID string `json:"app_id" firestore:"app_id"`
+	AppID int64 `json:"app_id" firestore:"app_id"`
 	// GitHub App Installation ID
 	InstallationID int64 `json:"id" firestore:"id"`
 }

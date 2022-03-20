@@ -26,4 +26,5 @@ test: ## Run tests.
 	go test -v $(CHECK_FILES)
 
 publish-prebuild:
-	GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/netlify/git-gateway/cmd.Version=`git rev-parse HEAD`"
+	GOOS=linux GOARCH=amd64 go build -o ./git-gateway -ldflags "-X github.com/netlify/git-gateway/cmd.Version=`git rev-parse HEAD`" ./cloudrun/
+	docker build -t $${IMAGE:-git-gateway} --platform=linux/amd64 -f cloudrun/Dockerfile.prebuild .

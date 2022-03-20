@@ -31,7 +31,14 @@ func bootstrapIdentity() {
 	}
 	defer db.Close()
 
+	// Check if there are any existing app configurations
+	apps, err := db.ListApps(1, "")
+	if err != nil && len(apps) > 0 {
+		logrus.Fatalf("Error searching apps: %+v", err)
+	}
+
 	api := api.NewAPIWithVersion(context.TODO(), globalConfig, db, Version)
+	api.SetupEnabled = len(apps) == 0
 	l := fmt.Sprintf("%v:%v", globalConfig.API.Host, globalConfig.API.Port)
 	logrus.Infof("git-gateway API started on: %s", l)
 	api.ListenAndServe(l)
