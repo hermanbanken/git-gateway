@@ -12,6 +12,7 @@ import (
 	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/identity/models"
 	"github.com/netlify/git-gateway/identity/storage"
+	"github.com/netlify/git-gateway/static"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,8 +78,20 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	}
 	r.Post(AppHook, withError(api.hook))
 	r.Get(AppOAuthCallback, withError(api.callback))
-	r.Get("/", withError(api.withAuthentication(api.home)))
 	r.Get("/select-app", func(rw http.ResponseWriter, r *http.Request) {})
+
+	r.Route("/", func(r chi.Router) {
+		r.Get("/", withError(api.withAuthentication(api.home)))
+		r.Mount("/*", http.FileServer(http.FS(static.Files)))
+	})
+
+	// TODO mount at the right place
+	r.Route("/identity/", func(r chi.Router) {
+		r.Post("/token", withError(api.Token))
+		r.Get("/user", withError(api.withAuthentication(api.User)))
+	})
+
+	// TODO add proxy to git-gateway
 
 	api.handler = chi.ServerBaseContext(r, ctx)
 	LoadTemplates()

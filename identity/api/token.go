@@ -1,8 +1,10 @@
 package api
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
 
 func (a *API) Token(w http.ResponseWriter, r *http.Request) error {
-	sendJSON(w, 500, "")
-	return nil
+	return errors.New("not implemented")
 }

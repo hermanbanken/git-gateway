@@ -57,7 +57,7 @@ func init() {
 	// Required auth key
 	authKey := []byte(os.Getenv("SESSION_AUTH_SECRET"))
 	if len(authKey) == 0 {
-		panic("Configure SESSION_SECRET to avoid cookie tampering")
+		panic("Configure SESSION_AUTH_SECRET to avoid cookie tampering")
 	}
 	keys := [][]byte{authKey}
 
