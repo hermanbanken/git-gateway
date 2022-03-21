@@ -10,16 +10,19 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/netlify/git-gateway/conf"
+	"github.com/netlify/git-gateway/identity/models"
 	"github.com/netlify/git-gateway/identity/storage"
 	"github.com/sirupsen/logrus"
 )
 
 type API struct {
-	handler      http.Handler
-	db           storage.Connection
-	config       *conf.GlobalConfiguration
-	version      string
+	handler http.Handler
+	db      storage.Connection
+	config  *conf.GlobalConfiguration
+	version string
+
 	SetupEnabled bool
+	GetSingleApp func() (*models.App, error)
 }
 
 const AppSetupRedirectPath = "/identity/github/setup-redirect"
@@ -69,10 +72,13 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	// r.UseBypass(newStructuredLogger(logrus.StandardLogger()))
 	// r.Use(recoverer)
 
-	r.Get(AppSetupRedirectPath, withError(api.setup))
+	if api.SetupEnabled {
+		r.Get(AppSetupRedirectPath, withError(api.setup))
+	}
 	r.Post(AppHook, withError(api.hook))
 	r.Get(AppOAuthCallback, withError(api.callback))
 	r.Get("/", withError(api.withAuthentication(api.home)))
+	r.Get("/select-app", func(rw http.ResponseWriter, r *http.Request) {})
 
 	api.handler = chi.ServerBaseContext(r, ctx)
 	LoadTemplates()

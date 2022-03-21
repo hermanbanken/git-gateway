@@ -7,21 +7,21 @@ export GOOGLE_CLOUD_PROJECT_ID=$(gcloud projects list --filter="$(gcloud config 
 
 # setup secret
 gcloud services enable secretmanager.googleapis.com --project=$GOOGLE_CLOUD_PROJECT
-export SECRET=git-gateway
-gcloud secrets create $SECRET --replication-policy="automatic"
-gcloud secrets add-iam-policy-binding $SECRET \
+export GITGATEWAY_GCP_SECRET=git-gateway
+gcloud secrets create $GITGATEWAY_GCP_SECRET --replication-policy="automatic"
+gcloud secrets add-iam-policy-binding $GITGATEWAY_GCP_SECRET \
 --member=serviceAccount:$GOOGLE_CLOUD_PROJECT_ID-compute@developer.gserviceaccount.com \
 --role=roles/secretmanager.secretAccessor \
 --project $GOOGLE_CLOUD_PROJECT
 
 # prepare bootstrap
-gcloud secrets add-iam-policy-binding $SECRET \
+gcloud secrets add-iam-policy-binding $GITGATEWAY_GCP_SECRET \
 --member=serviceAccount:$GOOGLE_CLOUD_PROJECT_ID-compute@developer.gserviceaccount.com \
 --role=roles/secretmanager.secretVersionAdder \
 --project $GOOGLE_CLOUD_PROJECT
 
 # cleanup after initialization
-gcloud secrets remove-iam-policy-binding $SECRET \
+gcloud secrets remove-iam-policy-binding $GITGATEWAY_GCP_SECRET \
 --member=serviceAccount:$GOOGLE_CLOUD_PROJECT_ID-compute@developer.gserviceaccount.com \
 --role=roles/secretmanager.secretVersionAdder \
 --project $GOOGLE_CLOUD_PROJECT

@@ -29,9 +29,19 @@
             "generator": "secret"
         },
 
-        "SESSION_SECRET": {
-            "description": "Session secret is used to sign cookies for operators",
+        "SESSION_AUTH_SECRET": {
+            "description": "Session auth secret is used to sign cookies for operators",
             "generator": "secret"
+        },
+        "SESSION_ENCRYPTION_SECRET": {
+            "description": "Session encryption secret is used to encrypt cookies for operators",
+            "generator": "secret"
+        },
+ 
+        "GITGATEWAY_GCP_SECRET": {
+            "description": "Name of the GCP Secret Manager secret (formats: 'name' / 'projects/project/secrets/name' / 'projects/project/secrets/name/versions/latest')",
+            "required": true,
+            "value": "git-gateway"
         }
     },
     "options": {

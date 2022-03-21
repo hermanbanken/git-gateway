@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
-	goth_github "github.com/markbates/goth/providers/github"
 	"github.com/netlify/git-gateway/identity/models"
 	"golang.org/x/oauth2"
 )
@@ -20,21 +19,38 @@ func (a *API) loginToApp(w http.ResponseWriter, r *http.Request, app *models.App
 }
 
 type Session struct {
-	AccessToken    string
-	AppID          int64
-	InstallationID int64
+	AppID       int64
+	AccessToken string
+}
+
+func (a *API) sessionFromRequest(r *http.Request) (*Session, error) {
+	appIDStr, err := gothic.GetFromSession("app", r)
+	if err != nil {
+		return nil, err
+	}
+	accessToken, err := gothic.GetFromSession("accessToken", r)
+	if err != nil {
+		return nil, err
+	}
+	if accessToken == "" || appIDStr == "" {
+		return nil, nil
+	}
+	appID, err := strconv.ParseInt(appIDStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &Session{AppID: appID, AccessToken: accessToken}, nil
 }
 
 func (a *API) withAuthentication(h func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		goth_github.New()
-		accessToken, err := gothic.GetFromSession("email", r)
-		accessToken, err := gothic.GetFromSession("accessToken", r)
-
-		// loginToApp
+		session, err := a.sessionFromRequest(r)
+		if session == nil {
+			http.Redirect(w, r, "/select-app", http.StatusTemporaryRedirect)
+			return err
+		}
 		return h(w, r)
 	}
-	return nil
 }
 
 func init() {

@@ -28,6 +28,8 @@ require (
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
+	cloud.google.com/go/iam v0.1.0 // indirect
+	cloud.google.com/go/secretmanager v1.3.0 // indirect
 	github.com/bradleyfalzon/ghinstallation/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20190909000816-272160613861 // indirect

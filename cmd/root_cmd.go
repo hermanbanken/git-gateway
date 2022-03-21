@@ -14,8 +14,9 @@ var configFile = ""
 var rootCmd = cobra.Command{
 	Use: "git-gateway",
 	Run: func(cmd *cobra.Command, args []string) {
-		if _, allowBootstrap := os.LookupEnv("BOOTSTRAP_IDENTITY"); allowBootstrap {
-			bootstrapIdentity()
+		if _, isGcpMode := os.LookupEnv("GCP_MODE"); isGcpMode {
+			gcpMode()
+			return
 		}
 		execWithConfig(cmd, serve)
 	},

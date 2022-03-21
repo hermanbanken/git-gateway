@@ -7,12 +7,14 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v43/github"
 	goth_github "github.com/markbates/goth/providers/github"
 	"github.com/netlify/git-gateway/identity/models"
+	"github.com/netlify/git-gateway/identity/secrets"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -40,16 +42,23 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) error {
 			ClientID:     config.GetClientID(),
 			ClientSecret: config.GetClientSecret(),
 		}
-		err = a.db.CreateApp(app)
-		if err != nil {
-			return err
+
+		if a.config.MultiInstanceMode {
+			// MultiInstanceMode saves app in the database
+			err = a.db.CreateApp(app)
+			if err != nil {
+				return err
+			}
+		} else {
+			// SingleInstanceMode saves app in a SecretManager Secret
+			err := secrets.SetApp(context.TODO(), os.Getenv("GITGATEWAY_GCP_SECRET"), app)
+			if err != nil {
+				return err
+			}
+			a.GetSingleApp = func() (*models.App, error) { return app, nil }
 		}
 
-		// Enable "Request user authorization (OAuth) during installation" and "Redirect on update"
-
-		// Either try to login directly (but user has no Installation yet)
-		// a.loginToApp(w, r, app)
-		// Or install first
+		// Forward the user to install the new app
 		a.installApp(w, r, app)
 		return nil
 	}
@@ -123,23 +132,43 @@ func (a *API) githubConfig(app *models.App) *oauth2.Config {
 	}
 }
 
-func (a *API) callback(w http.ResponseWriter, r *http.Request) error {
-	// Get the app context
-	state := r.URL.Query().Get("state")
+func (a *API) getApp(hint getAppHint) (*models.App, error) {
+	if a.config.MultiInstanceMode {
+		id, err := hint.getAppID()
+		if err != nil {
+			return nil, err
+		}
+		return a.db.GetApp(id)
+	} else {
+		return a.GetSingleApp()
+	}
+}
+
+type getAppHint interface {
+	getAppID() (int64, error)
+}
+
+type getAppIdFromState struct {
+	*http.Request
+}
+
+func (hint getAppIdFromState) getAppID() (id int64, err error) {
+	// Get the app from the url state context
+	state := hint.URL.Query().Get("state")
 	stateQuery, err := url.ParseQuery(state)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	appID, err := strconv.ParseInt(stateQuery.Get("app"), 10, 64)
-	if err != nil {
-		return err
-	}
-	app, err := a.db.GetApp(appID)
+	return strconv.ParseInt(stateQuery.Get("app"), 10, 64)
+}
+
+func (a *API) callback(w http.ResponseWriter, r *http.Request) error {
+	app, err := a.getApp(getAppIdFromState{r})
 	if err != nil {
 		return err
 	}
 
-	token, err := a.githubConfig(app).Exchange(context.TODO(), r.URL.Query().Get("code"), oauth2.SetAuthURLParam("state", state))
+	token, err := a.githubConfig(app).Exchange(context.TODO(), r.URL.Query().Get("code"), oauth2.SetAuthURLParam("state", r.URL.Query().Get("state")))
 	if err != nil {
 		return err
 	}
