@@ -37,11 +37,14 @@ func (conn *Connection) Close() error {
 }
 
 func (conn *Connection) ListApps(count int, start string) (out []*models.App, err error) {
-	it := conn.client.Collection(conn.appCollection).
-		OrderBy(firestore.DocumentID, firestore.Asc).
-		StartAt(start).
-		Limit(count).
-		Documents(conn.ctx())
+	query := conn.client.Collection(conn.appCollection).OrderBy(firestore.DocumentID, firestore.Asc)
+	if count > 0 {
+		query = query.Limit(count)
+	}
+	if start != "" {
+		query = query.StartAt("")
+	}
+	it := query.Documents(conn.ctx())
 	for {
 		snp, err := it.Next()
 		if err == nil {
@@ -54,6 +57,8 @@ func (conn *Connection) ListApps(count int, start string) (out []*models.App, er
 		}
 		if iterator.Done == err {
 			return out, nil
+		} else if err != nil {
+			return nil, err
 		}
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func newStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Handler {
+func NewStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Handler {
 	return chimiddleware.RequestLogger(&structuredLogger{logger})
 }
 

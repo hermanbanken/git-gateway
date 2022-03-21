@@ -53,7 +53,7 @@ func (a *API) withAuthentication(h func(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func init() {
+func initCookies() {
 	// Required auth key
 	authKey := []byte(os.Getenv("SESSION_AUTH_SECRET"))
 	if len(authKey) == 0 {

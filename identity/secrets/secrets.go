@@ -13,7 +13,6 @@ import (
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gopkg.in/yaml.v3"
 )
 
 var ErrNotAvailable = errors.New("secret does not exist or version is not available")
@@ -40,7 +39,7 @@ func GetApp(ctx context.Context, secretName string) (out *models.App, err error)
 		return nil, ErrNotFilled
 	}
 	out = new(models.App)
-	err = yaml.Unmarshal(data.GetPayload().GetData(), &out)
+	err = json.Unmarshal(data.GetPayload().GetData(), &out)
 	return
 }
 

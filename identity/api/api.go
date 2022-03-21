@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	main_api "github.com/netlify/git-gateway/api"
 	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/identity/models"
 	"github.com/netlify/git-gateway/identity/storage"
@@ -20,7 +21,6 @@ type API struct {
 	handler http.Handler
 	db      storage.Connection
 	config  *conf.GlobalConfiguration
-	version string
 
 	SetupEnabled bool
 	GetSingleApp func() (*models.App, error)
@@ -65,10 +65,12 @@ func waitForTermination(log logrus.FieldLogger, done <-chan struct{}) {
 }
 
 // NewAPIWithVersion creates a new REST API using the specified version
-func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfiguration, db storage.Connection, version string) *API {
-	api := &API{config: globalConfig, db: db, version: version}
+func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfiguration, db storage.Connection, gitApi *main_api.API) *API {
+	initCookies()
+	api := &API{config: globalConfig, db: db}
 
 	r := chi.NewRouter()
+	r.Use(main_api.NewStructuredLogger(logrus.StandardLogger()))
 	// r.Use(addRequestID)
 	// r.UseBypass(newStructuredLogger(logrus.StandardLogger()))
 	// r.Use(recoverer)
@@ -78,7 +80,7 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	}
 	r.Post(AppHook, withError(api.hook))
 	r.Get(AppOAuthCallback, withError(api.callback))
-	r.Get("/select-app", func(rw http.ResponseWriter, r *http.Request) {})
+	r.Get("/select-app", func(rw http.ResponseWriter, r *http.Request) { rw.WriteHeader(200) })
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", withError(api.withAuthentication(api.home)))
@@ -91,7 +93,9 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 		r.Get("/user", withError(api.withAuthentication(api.User)))
 	})
 
-	// TODO add proxy to git-gateway
+	// Proxy to git-gateway
+	// TODO inject NF-Sign
+	r.Mount("/git/", http.HandlerFunc(gitApi.Serve))
 
 	api.handler = chi.ServerBaseContext(r, ctx)
 	LoadTemplates()

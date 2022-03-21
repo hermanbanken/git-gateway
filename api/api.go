@@ -63,6 +63,10 @@ func (a *API) ListenAndServe(hostAndPort string) {
 	}
 }
 
+func (a *API) Serve(w http.ResponseWriter, r *http.Request) {
+	a.handler.ServeHTTP(w, r)
+}
+
 // waitForShutdown blocks until the system signals termination or done has a value
 func waitForTermination(log logrus.FieldLogger, done <-chan struct{}) {
 	signals := make(chan os.Signal, 1)
@@ -89,7 +93,7 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 	r := newRouter()
 	r.UseBypass(xffmw.Handler)
 	r.Use(addRequestID)
-	r.UseBypass(newStructuredLogger(logrus.StandardLogger()))
+	r.UseBypass(NewStructuredLogger(logrus.StandardLogger()))
 	r.Use(recoverer)
 
 	r.Get("/health", api.HealthCheck)

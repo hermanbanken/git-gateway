@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	gitApi "github.com/netlify/git-gateway/api"
 	"github.com/netlify/git-gateway/conf"
 	"github.com/netlify/git-gateway/identity/api"
 	"github.com/netlify/git-gateway/identity/models"
 	"github.com/netlify/git-gateway/identity/secrets"
 	"github.com/netlify/git-gateway/identity/storage/dial"
+	gitDial "github.com/netlify/git-gateway/storage/dial"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -28,16 +30,22 @@ func gcpMode() {
 		logrus.Fatalf("Failed to load configuration: %+v", err)
 	}
 
+	gitDb, err := gitDial.Dial(globalConfig)
+	if err != nil {
+		logrus.Fatalf("Error opening database: %+v", err)
+	}
+	defer gitDb.Close()
+	gitApi := gitApi.NewAPIWithVersion(context.TODO(), globalConfig, gitDb, Version)
+
 	db, err := dial.Dial(globalConfig)
 	if err != nil {
 		logrus.Fatalf("Error opening database: %+v", err)
 	}
 	defer db.Close()
-
-	api := api.NewAPIWithVersion(context.TODO(), globalConfig, db, Version)
+	api := api.NewAPIWithVersion(context.TODO(), globalConfig, db, gitApi)
 
 	// Check if there is an existing app configuration
-	if secretName, useSecret := os.LookupEnv("GITGATEWAY_GCP_SECRET"); useSecret {
+	if secretName, useSecret := os.LookupEnv("GITGATEWAY_GCP_SECRET"); !globalConfig.MultiInstanceMode && useSecret {
 		var cachedApp *models.App
 		api.GetSingleApp = func() (app *models.App, err error) {
 			if cachedApp != nil {
