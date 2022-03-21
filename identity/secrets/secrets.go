@@ -23,6 +23,7 @@ func GetApp(ctx context.Context, secretName string) (out *models.App, err error)
 	if err != nil {
 		return nil, err
 	}
+	defer client.Close()
 
 	versionName, _, err := fullNameOfSecretVersion(secretName, "latest")
 	if err != nil {
@@ -48,6 +49,7 @@ func SetApp(ctx context.Context, secretName string, out *models.App) (err error)
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 
 	_, secretNameParts, err := fullNameOfSecretVersion(secretName, "latest")
 	if err != nil {

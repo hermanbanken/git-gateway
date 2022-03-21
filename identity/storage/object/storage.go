@@ -149,7 +149,7 @@ func Dial(config *conf.GlobalConfiguration) (*Connection, error) {
 	}
 
 	// make connection (WithBlock to ensure it works)
-	client, err := firestore.NewClient(ctx, project, option.WithGRPCDialOption(grpc.WithBlock()))
+	client, err := firestore.NewClient(ctx, project, debugOpt...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,4 +169,13 @@ func IsFirestore(db conf.DBConfiguration) bool {
 		return true
 	}
 	return strings.HasPrefix(db.URL, "gcp://firestore")
+}
+
+var debugOpt []option.ClientOption
+
+// TODO enable blocking connect when debugging
+func init() {
+	if false {
+		debugOpt = []option.ClientOption{option.WithGRPCDialOption(grpc.WithBlock())}
+	}
 }

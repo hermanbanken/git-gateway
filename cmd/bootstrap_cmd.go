@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	gitApi "github.com/netlify/git-gateway/api"
 	"github.com/netlify/git-gateway/conf"
@@ -35,15 +37,26 @@ func gcpMode() {
 		logrus.Fatalf("Error opening database: %+v", err)
 	}
 	defer gitDb.Close()
-	gitApi := gitApi.NewAPIWithVersion(context.TODO(), globalConfig, gitDb, Version)
 
 	db, err := dial.Dial(globalConfig)
 	if err != nil {
 		logrus.Fatalf("Error opening database: %+v", err)
 	}
 	defer db.Close()
+
+	gitApi := gitApi.NewAPIWithVersion(context.TODO(), globalConfig, gitDb, Version)
 	api := api.NewAPIWithVersion(context.TODO(), globalConfig, db, gitApi)
 
+	// Check if existing app configuration is mounted on the environment
+	if data, hasData := os.LookupEnv("GITGATEWAY_GCP_SECRET_DATA"); hasData {
+		app := new(models.App)
+		if err = json.Unmarshal([]byte(data), &app); err == nil {
+			api.GetSingleApp = func() (app *models.App, err error) {
+				return app, nil
+			}
+			goto start
+		}
+	}
 	// Check if there is an existing app configuration
 	if secretName, useSecret := os.LookupEnv("GITGATEWAY_GCP_SECRET"); !globalConfig.MultiInstanceMode && useSecret {
 		var cachedApp *models.App
@@ -63,7 +76,10 @@ func gcpMode() {
 		}
 	}
 
+start:
 	l := fmt.Sprintf("%v:%v", globalConfig.API.Host, globalConfig.API.Port)
-	logrus.Infof("git-gateway API started on: %s", l)
+	logrus.Infof("git-gateway API started on %s in %s", l, time.Since(startTime))
 	api.ListenAndServe(l)
 }
+
+var startTime = time.Now()
