@@ -27,7 +27,7 @@ func withError(fn func(w http.ResponseWriter, r *http.Request) error) func(w htt
 		dw := doneWriter{w, false}
 		err := fn(&dw, r)
 		if err != nil {
-			logrus.Print(err)
+			logrus.Error(err)
 			if !dw.done {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}

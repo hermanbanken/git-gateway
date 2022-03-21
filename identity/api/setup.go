@@ -56,6 +56,7 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) error {
 				return err
 			}
 			a.GetSingleApp = func() (*models.App, error) { return app, nil }
+			a.SetupEnabled = false
 		}
 
 		// Forward the user to install the new app

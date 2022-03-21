@@ -9,10 +9,15 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
 	"github.com/netlify/git-gateway/identity/models"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
 func (a *API) loginToApp(w http.ResponseWriter, r *http.Request, app *models.App) {
+	if app == nil {
+		http.Redirect(w, r, "/select-app", http.StatusTemporaryRedirect)
+		return
+	}
 	state := url.Values{"app": []string{strconv.FormatInt(app.ID, 10)}}.Encode()
 	redirectURL := a.githubConfig(app).AuthCodeURL(state, oauth2.SetAuthURLParam("login", app.Owner.Login))
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
@@ -45,8 +50,15 @@ func (a *API) sessionFromRequest(r *http.Request) (*Session, error) {
 func (a *API) withAuthentication(h func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		session, err := a.sessionFromRequest(r)
+		logrus.Warn(err)
 		if session == nil {
-			http.Redirect(w, r, "/select-app", http.StatusTemporaryRedirect)
+			app, err := a.getApp(nil)
+			if err != nil {
+				logrus.Error(err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return err
+			}
+			a.loginToApp(w, r, app)
 			return err
 		}
 		return h(w, r)

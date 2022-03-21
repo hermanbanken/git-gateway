@@ -84,7 +84,7 @@ func NewAPIWithVersion(ctx context.Context, globalConfig *conf.GlobalConfigurati
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", withError(api.withAuthentication(api.home)))
-		r.Mount("/*", http.FileServer(http.FS(static.Files)))
+		r.Mount("/", http.FileServer(http.FS(static.Files)))
 	})
 
 	// TODO mount at the right place
